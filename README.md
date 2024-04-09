@@ -6,7 +6,7 @@
 ## Установка
 
 ```
-pip install sdc_api_py
+pip install SdcStatsBot
 ```
 
 # Внимание!

@@ -1,15 +1,20 @@
 from SDcStatsBot import SdcApi
 import disnake
 from disnake.ext import commands
+import logging
 
-
+logging.basicConfig(level=logging.INFO)
 bot = commands.Bot(command_prefix="!", intents=disnake.Intents.all())
 
+
 async def main():
-    await SdcApi().post("Бот айди без кавычек", "Sdc токен", "Количество серверов без кавычек", "Количество шардов без кавычек")
+    api = SdcApi(logger=logging.getLogger(__name__), interval=60) #Update interval 60 minutes
+    await api.start_posting_stats(bot_id=1006180000292163644, # Bot Id
+                                  sdc_token="token_sdc_api", # Token from the Sdc website
+                                  servers_count=439, shard_count=1) # It is not necessary to set the number of shards
 
 @bot.event
 async def on_ready():
     await main()
 
-bot.run("")
+bot.run("token bot") # Token bot discord developer portal

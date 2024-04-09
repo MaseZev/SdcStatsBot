@@ -1,31 +1,42 @@
 import aiohttp
-from disnake.ext import tasks
-from loguru import logger
+import asyncio
+import logging
+from .interval import Global
 
 class SdcApi:
-    def __init__(self):
+    def __init__(self, logger=None, interval=30):
         self.web_url = "https://api.server-discord.com/v2"
         self.session = aiohttp.ClientSession()
+        self.logger = logger or logging.getLogger(__name__)
+        self.interval = interval
+        Global.interval = interval
 
-    @tasks.loop(minutes=30)
-    async def post(self, bot_id: int = None, sdc_token=None, servers_count: int = None, shard_count: int = None):
-        if not bot_id:
-            raise ValueError("bot_id is required")
-        if not sdc_token:
-            raise ValueError("sdc_token is required")
-        if not servers_count:
-            raise ValueError("servers_count is required")
-        if not shard_count:
-            raise ValueError("shard_count is required")
+    async def post_stats_loop(self, bot_id, sdc_token, servers_count, shard_count):
+        while True:
+            await self.post_stats(bot_id, sdc_token, servers_count, shard_count)
+            await asyncio.sleep(self.interval * 60)
+
+    async def post_stats(self, bot_id: int, sdc_token: str, servers_count: int, shard_count: int = 1):
+        if not isinstance(bot_id, int):
+            raise ValueError("bot_id must be an integer")
+        if not isinstance(sdc_token, str):
+            raise ValueError("sdc_token must be a string")
+        if not isinstance(servers_count, int):
+            raise ValueError("servers_count must be an integer")
+        if not isinstance(shard_count, int):
+            raise ValueError("shard_count must be an integer")
 
         try:
             headers = {"Authorization": f"SDC {sdc_token}"}
             url = f"{self.web_url}/bots/{bot_id}/stats"
             payload = {"shards": shard_count, "servers": servers_count}
             async with self.session.post(url, headers=headers, json=payload) as response:
-                if response.status!= 200:
-                    return print(await response.text())
-                logger.success("SDC API: Статистика успешно отправлена следущее обновление статистики через 30 минут")
-                return await response.json()
+                if response.status != 200:
+                    self.logger.error("Failed to send statistics to SDC API: %s", await response.text())
+                else:
+                    self.logger.info("Statistics successfully sent to SDC API. Next update in %s minutes", self.interval)
         except aiohttp.ClientError as e:
-            return
+            self.logger.error("Error while sending statistics to SDC API")
+
+    async def start_posting_stats(self, bot_id, sdc_token, servers_count, shard_count=1):
+        asyncio.create_task(self.post_stats_loop(bot_id, sdc_token, servers_count, shard_count))

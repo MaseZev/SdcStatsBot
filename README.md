@@ -1,7 +1,7 @@
-# sdc-api.py
+# SdcStatsBot
 * Враппер на Python для [SDC API](https://docs.server-discord.com)
 * Документация к API: https://docs.server-discord.com/
-* [Сервер поддержки](https://discord.gg/8epHXKA) враппера 
+* [Сервер поддержки](https://discord.gg/H7FQFGEPz5) враппера 
 
 ## Установка
 

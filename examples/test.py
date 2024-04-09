@@ -1,4 +1,4 @@
-from SdcStatsBot.client import SdcApi
+from SDcStatsBot import SdcApi
 import disnake
 from disnake.ext import commands
 
